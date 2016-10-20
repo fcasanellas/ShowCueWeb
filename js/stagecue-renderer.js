@@ -3,7 +3,7 @@ var a = new AudioContext();
 var $q;
 var seq = 0;
 
-function RenderTarget(channel) 
+function RenderTarget(channel)
 {
   this.id = channel.id;
   this.playingClips = [];
@@ -16,9 +16,9 @@ function RenderTarget(channel)
 
 RenderTarget.prototype.stop = function(targetSeq)
 {
-  this.playingClips.forEach(function (clip) { 
+  this.playingClips.forEach(function (clip) {
     if (targetSeq == null || clip.seq < targetSeq)
-      clip.deferredStop.resolve(); 
+      clip.deferredStop.resolve();
   });
 };
 
@@ -39,16 +39,16 @@ RenderTarget.prototype.addClip = function addClip(clip)
 
 RenderTarget.prototype.removeClip = function removeClip(clip)
 {
-  if (this.currentClip === clip) 
+  if (this.currentClip === clip)
     this.currentClip = null;
   var i = this.playingClips.indexOf(clip);
   if (i >= 0) this.playingClips.splice(i, 1);
 };
 
-function RawScreen(screen) 
+function RawScreen(screen)
 {
   this.screen = screen;
-  this.window = null;  
+  this.window = null;
 }
 
 RawScreen.prototype.load = function load(unloadCallback)
@@ -76,7 +76,7 @@ RawScreen.prototype.load = function load(unloadCallback)
   } else {
     defLoaded.resolve();
   }
-  
+
   defLoaded.promise.then(function() {
     var body = $('body', raw.window.document);
     if (raw.screen.background)
@@ -166,7 +166,7 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
     if (config.delay)
     {
       setTimeout(function() {
-        defDelay.resolve(); 
+        defDelay.resolve();
       }, config.delay * 1000);
     } else {
       defDelay.resolve();
@@ -187,7 +187,7 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
         }
         setTimeout(ends, config.fadeRange[1] * 1000);
       }
-      if (config.style != null && config.style != "") 
+      if (config.style != null && config.style != "")
       {
         if (currentActive != null && channel.screen)
         {
@@ -205,7 +205,7 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
         {
           endNow = false;
           var ret = null;
-          try { 
+          try {
             ret = new Function(config.script).call(currentActive.visualNode);
           } catch (e) {
             console.warn('Failure in executing user script', e);
@@ -239,7 +239,7 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
 
     var target = renderTargets[channel.id];
 
-    var clip = { 
+    var clip = {
       source: a.createBufferSource(), gain: a.createGain(), seq: seq++,
       endPromise: def.promise, deferredStop: defStop, allowOverlap: config.allowOverlap
     };
@@ -266,11 +266,11 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
       config.delay != null ? a.currentTime + config.delay : 0,
       config.range[0] != null ? config.range[0] : 0,
       config.range[1] && config.range[0] != null ?
-        config.range[1] - config.range[0] : 
+        config.range[1] - config.range[0] :
         clip.source.buffer.duration - (config.range[0] || 0)
     );
 
-    target.addClip(clip);    
+    target.addClip(clip);
     return def.promise;
   };
 
@@ -280,14 +280,14 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
 
     var def = $q.defer();
     var defStop = $q.defer();
-    
+
     var screen = rawScreens[channel.screen.id];
     var target = renderTargets[channel.id];
 
     var node;
     var removal;
 
-    var elementId = 
+    var elementId =
       'id' +
       Math.floor((1 + Math.random()) * 0x100000000).toString(16).substring(1) +
       Math.floor((1 + Math.random()) * 0x100000000).toString(16).substring(1);
@@ -303,7 +303,7 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
       node = $('<div>').attr({ id: elementId });
     }
 
-    var clip = { 
+    var clip = {
       visualNode: node, styles: [], elementId: elementId, seq: seq++,
       endPromise: def.promise, deferredStop: defStop, allowOverlap: config.allowOverlap
     };
@@ -312,7 +312,7 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
     if (config.delay)
     {
       setTimeout(function() {
-        defDelay.resolve(); 
+        defDelay.resolve();
       }, config.delay * 1000);
     } else {
       defDelay.resolve();
@@ -334,16 +334,16 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
           def.resolve();
         });
       }
-      node.css({ 
-        width: config.width || item.width || 100, 
+      node.css({
+        width: config.width || item.width || 100,
         height: config.height || item.height || 100,
-        position: 'absolute', 
+        position: 'absolute',
         opacity: config.opacity || undefined,
         zIndex: channel.index + 10
       });
       node.position({my: config.positionMy || 'center', at: config.positionAt || 'center', collision: 'none', of: screen.getWrapperSelector()});
 
-      if (config.style != null && config.style != "") 
+      if (config.style != null && config.style != "")
       {
         var styleString = config.style.replace(/\$ID\$/g, elementId);
         var style = $("<style>" + styleString + "</style>");
@@ -358,7 +358,7 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
         clip.source.connect(clip.gain);
         clip.gain.connect(target.masterGain);
         clip.gain.gain.value = config.gain != null ? config.gain : 1;
-        node[0].play();
+        node[0].autoplay = true;
       }
       removal = function() {
         clip.styles.forEach(function(i) { i.remove(); });
@@ -383,14 +383,14 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
   {
     if (!(channel instanceof ShowChannel)) return;
 
-    var t = renderTargets[channel.id] = 
+    var t = renderTargets[channel.id] =
       renderTargets[channel.id] || new RenderTarget(channel);
 
     if (channel.screen) {
       var s = rawScreens[channel.screen.id] =
         rawScreens[channel.screen.id] || new RawScreen(channel.screen);
 
-      var unloadCallback = function() { 
+      var unloadCallback = function() {
           for (var i in renderTargets)
           {
             if (renderTargets[i].screenId == s.id)
@@ -407,4 +407,3 @@ angular.module("stageCue").service("sc.renderer", ['$q', function (q) {
     delete renderTargets[channel.id];
   };
 }]);
-
